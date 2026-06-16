@@ -7,9 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        /* ========================================================
-           PENGATURAN KHUSUS PRINTER
-           ======================================================== */
         @media print {
             @page { size: A4 landscape; margin: 10mm; } 
             body { background-color: white; color: black; -webkit-print-color-adjust: exact; background-image: none !important; }
@@ -28,7 +25,6 @@
             .teks-tanda-tangan { position: relative; z-index: 2; padding-right: 10px; }
         }
 
-        /* Styling Scrollbar biar rapi */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -37,7 +33,6 @@
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800 font-sans flex flex-col relative pb-16">
 
-    <!-- HEADER / NAVBAR -->
     <nav class="bg-gray-800 text-white py-3 px-6 flex justify-between items-center shadow-md screen-area z-20 relative">
         <div class="flex items-center gap-3">
             <img src="logo.png" alt="Logo" class="w-10 h-10 bg-white rounded p-1" onerror="this.style.display='none'">
@@ -50,26 +45,23 @@
         </div>
     </nav>
 
-    <!-- STATUS KONEKSI TABLET -->
     <div id="statusTablet" class="screen-area text-center py-1 text-xs font-bold bg-red-600 text-white shadow-sm z-10 transition-colors">
         🔴 Tablet Pelanggan Offline
     </div>
 
-    <!-- AREA LAYAR UTAMA -->
     <div class="screen-area p-4 sm:p-6 flex-1 flex justify-center items-start">
         <div class="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- KIRI: KARTU SCANNER -->
             <div class="lg:col-span-4 bg-white rounded-lg p-6 shadow-sm border border-gray-200 flex flex-col gap-5 h-fit sticky top-6">
                 <h2 class="text-xl font-bold mb-1 border-b border-gray-200 pb-3">Kasir / POS Scanner</h2>
                 
                 <div>
                     <label class="block text-sm font-semibold mb-1 text-gray-700">Scan Barcode / Nama Barang</label>
                     <div class="relative">
-                        <input type="text" id="barcodeInput" autocomplete="off" class="w-full border border-gray-300 rounded bg-gray-50 p-2.5 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all outline-none" placeholder="Menunggu database..." disabled autofocus>
+                        <input type="text" id="barcodeInput" autocomplete="off" class="w-full border border-gray-300 rounded bg-gray-50 p-2.5 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all outline-none" placeholder="Menunggu database dimuat..." disabled autofocus>
                         <ul id="searchDropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto mt-1 text-sm"></ul>
                     </div>
-                    <p id="namaBarangPreview" class="text-xs text-green-600 font-bold mt-1 h-4"></p>
+                    <p id="namaBarangPreview" class="text-xs font-bold mt-1 h-4 text-green-600"></p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -102,10 +94,8 @@
                 </button>
             </div>
 
-            <!-- KANAN: KARTU STRUK / TABEL -->
             <div class="lg:col-span-8 bg-white rounded-lg p-6 shadow-sm border border-gray-200 flex flex-col min-h-[600px]">
                 
-                <!-- Info Nota -->
                 <div class="mb-6 flex flex-col gap-2 text-sm text-gray-800">
                     <div class="flex items-center gap-4">
                         <span class="w-32 font-semibold">Tanggal:</span> 
@@ -119,19 +109,16 @@
                         <span class="w-32 font-semibold">Keterangan:</span> 
                         <input type="text" id="inputCatatan" class="border-b border-gray-300 focus:border-blue-500 outline-none flex-1 py-1 bg-transparent" placeholder="Ketik catatan tambahan...">
                     </div>
-                    <!-- INPUT OTOMATISASI WHATSAPP -->
                     <div class="flex items-center gap-4 mt-1">
                         <span class="w-32 font-semibold flex items-center gap-1 text-green-700">📱 No. WA:</span> 
                         <input type="text" id="inputNoWA" class="border-b border-green-300 focus:border-green-600 outline-none flex-1 py-1 font-semibold bg-transparent text-green-800 placeholder-green-300" placeholder="Contoh: 08123456789...">
                     </div>
                 </div>
 
-                <!-- Notifikasi Redundansi -->
                 <div id="infoRedundansi" class="hidden bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-3 rounded shadow-sm mb-4 text-xs">
                     <strong class="font-bold">⚠️ Terdapat Redundansi Baris:</strong> <span id="teksRedundansi"></span>
                 </div>
 
-                <!-- Box Tabel -->
                 <div class="flex-1 flex flex-col border border-gray-200 rounded">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse min-w-[600px]">
@@ -146,7 +133,6 @@
                                 </tr>
                             </thead>
                             <tbody id="listBarang" class="text-sm">
-                                <!-- Baris barang masuk sini -->
                             </tbody>
                         </table>
                     </div>
@@ -156,7 +142,6 @@
                     </div>
                 </div>
 
-                <!-- AKSI TOMBOL BAWAH (Cetak & Kirim WA Berdampingan) -->
                 <div class="mt-6 flex justify-end gap-3 pb-2">
                     <button onclick="kirimWhatsApp()" class="bg-[#25D366] text-white px-6 py-2.5 rounded shadow hover:bg-green-600 font-semibold text-sm transition-colors flex items-center gap-2">
                         💬 Kirim WA
@@ -169,14 +154,12 @@
         </div>
     </div>
 
-    <!-- FOOTER COPYRIGHT BADGE -->
     <div class="screen-area fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
         <div class="bg-gray-800 text-gray-300 px-4 py-1.5 rounded-full text-xs tracking-wider opacity-90 shadow-sm">
             TGOS HELPER © 2026
         </div>
     </div>
 
-    <!-- AREA KHUSUS PRINT -->
     <div id="printLayout" class="hidden print:block w-full"></div>
 
     <script>
@@ -192,9 +175,6 @@
 
         const preloader = new Image(); preloader.src = URL_STEMPEL;
 
-        // ====================================================================
-        // SISTEM KOMUNIKASI P2P KE TABLET PELANGGAN
-        // ====================================================================
         const peer = new Peer('kasir-tokofaster-01');
         let koneksiTablet = null;
 
@@ -233,27 +213,37 @@
         }
 
         // ====================================================================
-        // AMBIL DATABASE SPREADSHEET 
+        // FETCH DATABASE TERBARU
         // ====================================================================
         async function fetchDatabase() {
+            // PASTE LINK "PUBLISH TO WEB" CSV KAMU DI SINI BRAY!
+            // Format link harus diakhiri dengan /pub?output=csv atau format=csv
             const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqFjmQEMLJl-UhiBkV6hDmVePKMGhWgUkwqPWiUOcv6YeBjX9-mw75au_WztJIkcbwr0D2hcDAGZrw/pub?gid=0&single=true&output=csv';
+            
+            let preview = document.getElementById('namaBarangPreview');
+
             try {
+                if(url === 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqFjmQEMLJl-UhiBkV6hDmVePKMGhWgUkwqPWiUOcv6YeBjX9-mw75au_WztJIkcbwr0D2hcDAGZrw/pub?gid=0&single=true&output=csv') {
+                    throw new Error("Link CSV belum dimasukkan!");
+                }
+
                 const response = await fetch(url);
-                if (!response.ok) throw new Error("Gagal mengambil data");
+                if (!response.ok) throw new Error("Gagal mengakses data");
                 const csvText = await response.text();
                 const rows = csvText.split('\n');
                 
                 for (let i = 1; i < rows.length; i++) {
                     const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (cols.length >= 14) { 
-                        let nama = cols[2].replace(/['"]+/g, '').trim(); 
-                        let kodeJamak = cols[3].replace(/['"]+/g, '').trim(); 
-                        let kodeTunggal = cols[4].replace(/['"]+/g, '').trim(); 
+                    if (cols.length >= 13) { 
+                        let nama = cols[2] ? cols[2].replace(/['"]+/g, '').trim() : ''; 
+                        let kodeJamak = cols[3] ? cols[3].replace(/['"]+/g, '').trim() : ''; 
+                        let kodeTunggal = cols[4] ? cols[4].replace(/['"]+/g, '').trim() : ''; 
                         
-                        let hargaG1 = parseInt(cols[6].replace(/['"\.]+/g, '').trim()) || 0; 
-                        let hargaG2 = parseInt(cols[9].replace(/['"\.]+/g, '').trim()) || 0; 
-                        let hargaE1 = parseInt(cols[11].replace(/['"\.]+/g, '').trim()) || 0; 
-                        let hargaE2 = parseInt(cols[13].replace(/['"\.]+/g, '').trim()) || 0; 
+                        // Perbaikan Indeks Sesuai Gambar
+                        let hargaG1 = parseInt(cols[6] ? cols[6].replace(/['"\.]+/g, '').trim() : '0') || 0; 
+                        let hargaG2 = parseInt(cols[8] ? cols[8].replace(/['"\.]+/g, '').trim() : '0') || 0; 
+                        let hargaE1 = parseInt(cols[10] ? cols[10].replace(/['"\.]+/g, '').trim() : '0') || 0; 
+                        let hargaE2 = parseInt(cols[12] ? cols[12].replace(/['"\.]+/g, '').trim() : '0') || 0; 
                         
                         let baseData = { nama, g1: hargaG1, g2: hargaG2, e1: hargaE1, e2: hargaE2 };
                         
@@ -264,17 +254,27 @@
                         }
                     }
                 }
+                
                 let inputScanner = document.getElementById('barcodeInput');
-                inputScanner.disabled = false; inputScanner.placeholder = "Siap! Ketik / Scan..."; inputScanner.focus();
+                inputScanner.disabled = false; 
+                inputScanner.placeholder = "Siap! Ketik / Scan..."; 
+                inputScanner.focus();
+                
+                preview.innerText = "✅ Database berhasil dimuat!";
+                preview.classList.replace('text-red-600', 'text-green-600');
+                
+                // Hilangkan pesan sukses setelah 3 detik biar bersih
+                setTimeout(() => { preview.innerText = ""; }, 3000);
+
             } catch (error) {
-                document.getElementById('namaBarangPreview').innerText = "Gagal memuat database!";
+                preview.innerText = "❌ Gagal memuat database! Pastikan link CSV benar.";
+                preview.classList.remove('text-green-600');
+                preview.classList.add('text-red-600');
+                console.error("Error Database:", error);
             }
         }
         window.onload = fetchDatabase;
 
-        // ====================================================================
-        // AUTOMATED WHATSAPP RECEIPT ENGINE 
-        // ====================================================================
         function kirimWhatsApp() {
             let noWA = document.getElementById('inputNoWA').value.trim();
             if (!noWA) {
@@ -328,9 +328,6 @@
             window.open(urlWA, '_blank');
         }
 
-        // ====================================================================
-        // INPUT HANDLERS & LOGIKA KASIR
-        // ====================================================================
         const inputHibrida = document.getElementById('barcodeInput');
         const dropdownSearch = document.getElementById('searchDropdown');
 
@@ -368,7 +365,9 @@
         function aktifkanUIBarang(dataBarang) {
             currentBarang = dataBarang;
             inputHibrida.value = currentBarang.nama; dropdownSearch.classList.add('hidden');
-            document.getElementById('namaBarangPreview').innerText = "Terdeteksi: " + currentBarang.nama;
+            let preview = document.getElementById('namaBarangPreview');
+            preview.innerText = "Terdeteksi: " + currentBarang.nama;
+            preview.classList.replace('text-red-600', 'text-green-600');
             document.getElementById('qtyInput').disabled = false; document.getElementById('unitInput').disabled = false;
             let hargaSelect = document.getElementById('hargaSelect'); let customHargaInput = document.getElementById('customHargaInput');
             hargaSelect.disabled = false; hargaSelect.classList.remove('bg-gray-100'); hargaSelect.classList.add('bg-white');
@@ -457,7 +456,9 @@
             currentBarang = null;
             let inp = document.getElementById('barcodeInput');
             inp.value = ''; inp.placeholder = "Siap! Ketik / Scan..."; document.getElementById('searchDropdown').classList.add('hidden');
-            document.getElementById('namaBarangPreview').innerText = ''; document.getElementById('qtyInput').value = '1'; document.getElementById('qtyInput').disabled = true;
+            let preview = document.getElementById('namaBarangPreview');
+            preview.innerText = ''; preview.classList.replace('text-red-600', 'text-green-600');
+            document.getElementById('qtyInput').value = '1'; document.getElementById('qtyInput').disabled = true;
             document.getElementById('unitInput').value = 'pcs'; document.getElementById('unitInput').disabled = true;
             let hargaSelect = document.getElementById('hargaSelect');
             hargaSelect.innerHTML = '<option value="">Pilih harga otomatis...</option>'; hargaSelect.disabled = true; hargaSelect.classList.remove('bg-white'); hargaSelect.classList.add('bg-gray-100');
