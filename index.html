@@ -7,9 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        /* ========================================================
-           PENGATURAN KHUSUS PRINTER
-           ======================================================== */
         @media print {
             @page { size: A4 landscape; margin: 10mm; } 
             body { background-color: white; color: black; -webkit-print-color-adjust: exact; background-image: none !important; }
@@ -28,7 +25,6 @@
             .teks-tanda-tangan { position: relative; z-index: 2; padding-right: 10px; }
         }
 
-        /* Styling Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -79,6 +75,17 @@
                             <option value="pcs">Pcs</option>
                             <option value="lusin">Lusin</option>
                             <option value="pak">Pak</option>
+                            <option value="dus">Dus</option>
+                            <option value="rim">Rim</option>
+                            <option value="slop">Slop/Roll</option>
+                            <option value="kodi">Kodi</option>
+                            <option value="ball">Ball</option>
+                            <option value="papan">Papan</option>
+                            <option value="tabung">Tabung</option>
+                            <option value="kotak">Kotak</option>
+                            <option value="lmbr">Lmbr</option>
+                            <option value="bungkus">Bungkus</option>
+                            <option value="set">Set</option>
                         </select>
                     </div>
                 </div>
@@ -129,15 +136,15 @@
                             <thead class="bg-gray-100">
                                 <tr class="border-b border-gray-300 text-xs uppercase tracking-wider text-gray-600">
                                     <th class="py-3 font-semibold text-center w-[5%]">No</th>
-                                    <th class="py-3 font-semibold pl-2 w-[15%]">Qty</th>
-                                    <th class="py-3 font-semibold pl-2 w-[40%]">Nama Barang</th>
+                                    <th class="py-3 font-semibold pl-2 w-[18%]">Qty</th>
+                                    <th class="py-3 font-semibold pl-2 w-[37%]">Nama Barang</th>
                                     <th class="py-3 font-semibold text-right pr-2 w-[15%]">Harga</th>
                                     <th class="py-3 font-semibold text-right pr-2 w-[15%]">Subtotal</th>
                                     <th class="py-3 font-semibold text-center w-[10%]">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="listBarang" class="text-sm">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                     
@@ -179,9 +186,6 @@
 
         const preloader = new Image(); preloader.src = URL_STEMPEL;
 
-        // ====================================================================
-        // SISTEM KOMUNIKASI P2P KE TABLET PELANGGAN
-        // ====================================================================
         const peer = new Peer('kasir-tokofaster-01');
         let koneksiTablet = null;
 
@@ -198,7 +202,6 @@
             statusBadge.innerText = "🟢 Tablet Pelanggan Online";
             statusBadge.className = "screen-area text-center py-1 text-xs font-bold bg-green-600 text-white shadow-sm z-10 transition-colors";
             broadcastKeTablet();
-            
             conn.on('close', () => {
                 koneksiTablet = null;
                 statusBadge.innerText = "🔴 Tablet Pelanggan Offline";
@@ -220,13 +223,8 @@
             koneksiTablet.send({ items: dataKeranjang, grandTotal: total });
         }
 
-        // ====================================================================
-        // AMBIL DATABASE SPREADSHEET (BEBAS ERROR & SESUAI KOLOM BARU)
-        // ====================================================================
         async function fetchDatabase() {
-            // LINK SPREADSHEET KAMU YANG BARU BRAY
             const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqFjmQEMLJl-UhiBkV6hDmVePKMGhWgUkwqPWiUOcv6YeBjX9-mw75au_WztJIkcbwr0D2hcDAGZrw/pub?gid=0&single=true&output=csv';
-            
             let preview = document.getElementById('namaBarangPreview');
 
             try {
@@ -238,17 +236,15 @@
                 
                 for (let i = 1; i < rows.length; i++) {
                     const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    // Pastikan panjang kolom cukup sampai ujung (Kolom N / Eceran 2)
                     if (cols.length >= 13) { 
                         let nama = cols[2] ? cols[2].replace(/['"]+/g, '').trim() : ''; 
                         let kodeJamak = cols[3] ? cols[3].replace(/['"]+/g, '').trim() : ''; 
                         let kodeTunggal = cols[4] ? cols[4].replace(/['"]+/g, '').trim() : ''; 
                         
-                        // Mapping posisi kolom terbaru sesuai gambar spreadsheet
-                        let hargaG1 = parseInt(cols[6] ? cols[6].replace(/['"\.]+/g, '').trim() : '0') || 0; // Kolom G
-                        let hargaG2 = parseInt(cols[9] ? cols[9].replace(/['"\.]+/g, '').trim() : '0') || 0; // Kolom J
-                        let hargaE1 = parseInt(cols[11] ? cols[11].replace(/['"\.]+/g, '').trim() : '0') || 0; // Kolom L
-                        let hargaE2 = parseInt(cols[13] ? cols[13].replace(/['"\.]+/g, '').trim() : '0') || 0; // Kolom N
+                        let hargaG1 = parseInt(cols[6] ? cols[6].replace(/['"\.]+/g, '').trim() : '0') || 0; 
+                        let hargaG2 = parseInt(cols[9] ? cols[9].replace(/['"\.]+/g, '').trim() : '0') || 0; 
+                        let hargaE1 = parseInt(cols[11] ? cols[11].replace(/['"\.]+/g, '').trim() : '0') || 0; 
+                        let hargaE2 = parseInt(cols[13] ? cols[13].replace(/['"\.]+/g, '').trim() : '0') || 0; 
                         
                         let baseData = { nama, g1: hargaG1, g2: hargaG2, e1: hargaE1, e2: hargaE2 };
                         
@@ -260,7 +256,6 @@
                     }
                 }
                 
-                // Jika sukses, nyalakan input kasir
                 let inputScanner = document.getElementById('barcodeInput');
                 inputScanner.disabled = false; 
                 inputScanner.placeholder = "Siap! Ketik / Scan..."; 
@@ -273,13 +268,12 @@
             } catch (error) {
                 preview.innerText = "❌ Gagal memuat database! Pastikan link CSV benar.";
                 preview.className = "text-xs font-bold mt-1 h-4 text-red-600";
-                console.error("Error Database:", error);
             }
         }
         window.onload = fetchDatabase;
 
         // ====================================================================
-        // AUTOMATED WHATSAPP RECEIPT ENGINE
+        // KIRIM WA DENGAN STRUKTUR DATA DIKOMPRES (MENGHEMAT PANJANG URL)
         // ====================================================================
         function kirimWhatsApp() {
             let noWA = document.getElementById('inputNoWA').value.trim();
@@ -298,21 +292,21 @@
                 return;
             }
 
-            // 1. Kumpulkan semua data transaksi
             let tanggalStr = document.getElementById('displayTanggal').innerText;
             let tuanToko = document.getElementById('inputTuanToko').value || 'Pelanggan';
             let catatan = document.getElementById('inputCatatan').value || '-';
             let grandTotal = document.getElementById('totalAkhir').innerText;
             let items = [];
 
+            // Nama key dikompres menjadi 1 huruf agar mempersingkat enkripsi Base64 bray
             barisBelanjaan.forEach((tr, index) => {
                 items.push({
-                    no: index + 1,
-                    qty: tr.querySelector('.row-qty').value,
-                    unit: tr.querySelector('.row-unit').value,
-                    nama: tr.querySelector('.row-nama').value.trim(),
-                    harga: parseInt(tr.querySelector('.row-harga').value) || 0,
-                    subtotal: (parseInt(tr.querySelector('.row-harga').value) || 0) * (parseInt(tr.querySelector('.row-qty').value) || 0)
+                    i: index + 1, // no
+                    q: tr.querySelector('.row-qty').value, // qty
+                    u: tr.querySelector('.row-unit').value, // unit
+                    n: tr.querySelector('.row-nama').value.trim(), // nama
+                    h: parseInt(tr.querySelector('.row-harga').value) || 0, // harga
+                    s: (parseInt(tr.querySelector('.row-harga').value) || 0) * (parseInt(tr.querySelector('.row-qty').value) || 0) // subtotal
                 });
             });
 
@@ -324,29 +318,23 @@
                 items: items
             };
 
-            // 2. Ubah data jadi kode rahasia (Base64)
             let kodeRahasia = btoa(unescape(encodeURIComponent(JSON.stringify(dataNota))));
-            
-            // 3. Buat nama alias untuk URL (Contoh: Budi-16-Juni)
             let namaAlias = tuanToko.replace(/\s+/g, '-') + "-" + tanggalStr.split(' ')[0] + "-" + tanggalStr.split(' ')[1];
 
-            // 4. RAKIT LINK NOTA DIGITAL (Ganti URL ini pakai link GitHub Pages kamu yang sebenarnya)
-            let linkNota = `https://thegrandmasteofstationary-dev.github.io/imissyou/nota.html?cust=${encodeURIComponent(namaAlias)}&data=${kodeRahasia}`;
+            let currentUrl = window.location.href.split('?')[0].replace(/index\.html$/, '');
+            if(!currentUrl.endsWith('/')) currentUrl += '/';
+            let linkNota = currentUrl + `nota.html?cust=${encodeURIComponent(namaAlias)}&data=${kodeRahasia}`;
 
-            // 5. Pesan pengantar di WA
             let teks = `🛒 *TOKO FASTER*\n\n`;
             teks += `Halo *${tuanToko}*,\nTerima kasih telah berbelanja di Toko Faster! 🙏\n\n`;
             teks += `Berikut adalah tautan *Nota Digital Resmi* untuk transaksi Anda pada ${tanggalStr}:\n\n`;
             teks += `👉 ${linkNota}\n\n`;
-            teks += `_Nota ini disimpan secara otomatis dan dapat Anda cetak/unduh sebagai PDF dari link tersebut._`;
+            teks += `_Nota ini disimpan secara otomatis dan dapat Anda unduh/cetak sebagai PDF._`;
 
-            // Tembak ke WA
             let urlWA = `https://api.whatsapp.com/send?phone=${noWA}&text=${encodeURIComponent(teks)}`;
             window.open(urlWA, '_blank');
         }
-        // ====================================================================
-        // INPUT HANDLERS & LOGIKA KASIR
-        // ====================================================================
+
         const inputHibrida = document.getElementById('barcodeInput');
         const dropdownSearch = document.getElementById('searchDropdown');
 
@@ -429,7 +417,20 @@
                     <div class="flex gap-1">
                         <input type="number" class="w-16 border border-gray-300 rounded p-1.5 text-sm row-qty focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center" value="${qty}" min="1">
                         <select class="border border-gray-300 rounded p-1.5 text-sm row-unit focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                            <option value="pcs" ${unit==='pcs'?'selected':''}>Pcs</option><option value="lusin" ${unit==='lusin'?'selected':''}>Lsn</option><option value="pak" ${unit==='pak'?'selected':''}>Pak</option>
+                            <option value="pcs" ${unit==='pcs'?'selected':''}>Pcs</option>
+                            <option value="lusin" ${unit==='lusin'?'selected':''}>Lsn</option>
+                            <option value="pak" ${unit==='pak'?'selected':''}>Pak</option>
+                            <option value="dus" ${unit==='dus'?'selected':''}>Dus</option>
+                            <option value="rim" ${unit==='rim'?'selected':''}>Rim</option>
+                            <option value="slop" ${unit==='slop'?'selected':''}>Slop</option>
+                            <option value="kodi" ${unit==='kodi'?'selected':''}>Kodi</option>
+                            <option value="ball" ${unit==='ball'?'selected':''}>Ball</option>
+                            <option value="papan" ${unit==='papan'?'selected':''}>Papan</option>
+                            <option value="tabung" ${unit==='tabung'?'selected':''}>Tabung</option>
+                            <option value="kotak" ${unit==='kotak'?'selected':''}>Kotak</option>
+                            <option value="lmbr" ${unit==='lmbr'?'selected':''}>Lmbr</option>
+                            <option value="bungkus" ${unit==='bungkus'?'selected':''}>Bks</option>
+                            <option value="set" ${unit==='set'?'selected':''}>Set</option>
                         </select>
                     </div>
                 </td>
