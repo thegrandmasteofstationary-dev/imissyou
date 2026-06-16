@@ -289,24 +289,8 @@
                 return;
             }
 
-            if (noWA.startsWith('0')) {
-                noWA = '62' + noWA.slice(1);
-            } else if (noWA.startsWith('+')) {
-                noWA = noWA.slice(1);
-            }
-
-            let tanggal = document.getElementById('displayTanggal').innerText;
-            let tuanToko = document.getElementById('inputTuanToko').value || '-';
-            let catatan = document.getElementById('inputCatatan').value || '-';
-            let grandTotal = document.getElementById('totalAkhir').innerText;
-
-            let teks = `🛒 *NOTA DIGITAL - ${NAMA_TOKO.toUpperCase()}*\n`;
-            teks += `📍 _${ALAMAT_TOKO}_\n`;
-            teks += `--------------------------------------------------\n`;
-            teks += `📅 *Tanggal :* ${tanggal}\n`;
-            teks += `👤 *Pelanggan :* ${tuanToko}\n`;
-            teks += `📝 *Catatan :* ${catatan}\n`;
-            teks += `--------------------------------------------------\n\n`;
+            if (noWA.startsWith('0')) { noWA = '62' + noWA.slice(1); } 
+            else if (noWA.startsWith('+')) { noWA = noWA.slice(1); }
 
             let barisBelanjaan = document.querySelectorAll('.baris-barang');
             if (barisBelanjaan.length === 0) {
@@ -314,26 +298,52 @@
                 return;
             }
 
+            // 1. Kumpulkan semua data transaksi
+            let tanggalStr = document.getElementById('displayTanggal').innerText;
+            let tuanToko = document.getElementById('inputTuanToko').value || 'Pelanggan';
+            let catatan = document.getElementById('inputCatatan').value || '-';
+            let grandTotal = document.getElementById('totalAkhir').innerText;
+            let items = [];
+
             barisBelanjaan.forEach((tr, index) => {
-                let qty = tr.querySelector('.row-qty').value;
-                let unit = tr.querySelector('.row-unit').value;
-                let nama = tr.querySelector('.row-nama').value.trim();
-                let harga = parseInt(tr.querySelector('.row-harga').value) || 0;
-                let subtotal = harga * qty;
-                
-                teks += `${index + 1}. *${nama}*\n`;
-                teks += `    ${qty} ${unit} x Rp ${harga.toLocaleString('id-ID')} = *Rp ${subtotal.toLocaleString('id-ID')}*\n`;
+                items.push({
+                    no: index + 1,
+                    qty: tr.querySelector('.row-qty').value,
+                    unit: tr.querySelector('.row-unit').value,
+                    nama: tr.querySelector('.row-nama').value.trim(),
+                    harga: parseInt(tr.querySelector('.row-harga').value) || 0,
+                    subtotal: (parseInt(tr.querySelector('.row-harga').value) || 0) * (parseInt(tr.querySelector('.row-qty').value) || 0)
+                });
             });
 
-            teks += `\n--------------------------------------------------\n`;
-            teks += `💰 *TOTAL AKHIR : Rp ${grandTotal}*\n`;
-            teks += `--------------------------------------------------\n\n`;
-            teks += `_Terima kasih telah berbelanja di Toko Faster!_ 🙏`;
+            let dataNota = {
+                tgl: tanggalStr,
+                cust: tuanToko,
+                ctt: catatan,
+                tot: grandTotal,
+                items: items
+            };
 
+            // 2. Ubah data jadi kode rahasia (Base64)
+            let kodeRahasia = btoa(unescape(encodeURIComponent(JSON.stringify(dataNota))));
+            
+            // 3. Buat nama alias untuk URL (Contoh: Budi-16-Juni)
+            let namaAlias = tuanToko.replace(/\s+/g, '-') + "-" + tanggalStr.split(' ')[0] + "-" + tanggalStr.split(' ')[1];
+
+            // 4. RAKIT LINK NOTA DIGITAL (Ganti URL ini pakai link GitHub Pages kamu yang sebenarnya)
+            let linkNota = `https://thegrandmasteofstationary-dev.github.io/TGOS-Helper/nota.html?cust=${encodeURIComponent(namaAlias)}&data=${kodeRahasia}`;
+
+            // 5. Pesan pengantar di WA
+            let teks = `🛒 *TOKO FASTER*\n\n`;
+            teks += `Halo *${tuanToko}*,\nTerima kasih telah berbelanja di Toko Faster! 🙏\n\n`;
+            teks += `Berikut adalah tautan *Nota Digital Resmi* untuk transaksi Anda pada ${tanggalStr}:\n\n`;
+            teks += `👉 ${linkNota}\n\n`;
+            teks += `_Nota ini disimpan secara otomatis dan dapat Anda cetak/unduh sebagai PDF dari link tersebut._`;
+
+            // Tembak ke WA
             let urlWA = `https://api.whatsapp.com/send?phone=${noWA}&text=${encodeURIComponent(teks)}`;
             window.open(urlWA, '_blank');
         }
-
         // ====================================================================
         // INPUT HANDLERS & LOGIKA KASIR
         // ====================================================================
