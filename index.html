@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
+        /* ========================================================
+           PENGATURAN KHUSUS PRINTER
+           ======================================================== */
         @media print {
             @page { size: A4 landscape; margin: 10mm; } 
             body { background-color: white; color: black; -webkit-print-color-adjust: exact; background-image: none !important; }
@@ -25,6 +28,7 @@
             .teks-tanda-tangan { position: relative; z-index: 2; padding-right: 10px; }
         }
 
+        /* Styling Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -61,7 +65,7 @@
                         <input type="text" id="barcodeInput" autocomplete="off" class="w-full border border-gray-300 rounded bg-gray-50 p-2.5 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all outline-none" placeholder="Menunggu database dimuat..." disabled autofocus>
                         <ul id="searchDropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto mt-1 text-sm"></ul>
                     </div>
-                    <p id="namaBarangPreview" class="text-xs font-bold mt-1 h-4 text-green-600"></p>
+                    <p id="namaBarangPreview" class="text-xs font-bold mt-1 h-4 text-blue-600">⏳ Menghubungkan ke Spreadsheet...</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -133,7 +137,7 @@
                                 </tr>
                             </thead>
                             <tbody id="listBarang" class="text-sm">
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                     
@@ -175,6 +179,9 @@
 
         const preloader = new Image(); preloader.src = URL_STEMPEL;
 
+        // ====================================================================
+        // SISTEM KOMUNIKASI P2P KE TABLET PELANGGAN
+        // ====================================================================
         const peer = new Peer('kasir-tokofaster-01');
         let koneksiTablet = null;
 
@@ -191,6 +198,7 @@
             statusBadge.innerText = "🟢 Tablet Pelanggan Online";
             statusBadge.className = "screen-area text-center py-1 text-xs font-bold bg-green-600 text-white shadow-sm z-10 transition-colors";
             broadcastKeTablet();
+            
             conn.on('close', () => {
                 koneksiTablet = null;
                 statusBadge.innerText = "🔴 Tablet Pelanggan Offline";
@@ -212,32 +220,35 @@
             koneksiTablet.send({ items: dataKeranjang, grandTotal: total });
         }
 
-// ====================================================================
-        // FETCH DATABASE TERBARU
+        // ====================================================================
+        // AMBIL DATABASE SPREADSHEET (BEBAS ERROR & SESUAI KOLOM BARU)
         // ====================================================================
         async function fetchDatabase() {
+            // LINK SPREADSHEET KAMU YANG BARU BRAY
             const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqFjmQEMLJl-UhiBkV6hDmVePKMGhWgUkwqPWiUOcv6YeBjX9-mw75au_WztJIkcbwr0D2hcDAGZrw/pub?gid=0&single=true&output=csv';
             
             let preview = document.getElementById('namaBarangPreview');
 
             try {
-                // Pengecekan "if" yang error udah aku buang langsung sikat fetch data!
                 const response = await fetch(url);
-                if (!response.ok) throw new Error("Gagal mengakses data");
+                if (!response.ok) throw new Error("Gagal mengakses data CSV");
+                
                 const csvText = await response.text();
                 const rows = csvText.split('\n');
                 
                 for (let i = 1; i < rows.length; i++) {
                     const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    // Pastikan panjang kolom cukup sampai ujung (Kolom N / Eceran 2)
                     if (cols.length >= 13) { 
                         let nama = cols[2] ? cols[2].replace(/['"]+/g, '').trim() : ''; 
                         let kodeJamak = cols[3] ? cols[3].replace(/['"]+/g, '').trim() : ''; 
                         let kodeTunggal = cols[4] ? cols[4].replace(/['"]+/g, '').trim() : ''; 
                         
-                        let hargaG1 = parseInt(cols[6] ? cols[6].replace(/['"\.]+/g, '').trim() : '0') || 0; 
-                        let hargaG2 = parseInt(cols[8] ? cols[8].replace(/['"\.]+/g, '').trim() : '0') || 0; 
-                        let hargaE1 = parseInt(cols[10] ? cols[10].replace(/['"\.]+/g, '').trim() : '0') || 0; 
-                        let hargaE2 = parseInt(cols[12] ? cols[12].replace(/['"\.]+/g, '').trim() : '0') || 0; 
+                        // Mapping posisi kolom terbaru sesuai gambar spreadsheet
+                        let hargaG1 = parseInt(cols[6] ? cols[6].replace(/['"\.]+/g, '').trim() : '0') || 0; // Kolom G
+                        let hargaG2 = parseInt(cols[9] ? cols[9].replace(/['"\.]+/g, '').trim() : '0') || 0; // Kolom J
+                        let hargaE1 = parseInt(cols[11] ? cols[11].replace(/['"\.]+/g, '').trim() : '0') || 0; // Kolom L
+                        let hargaE2 = parseInt(cols[13] ? cols[13].replace(/['"\.]+/g, '').trim() : '0') || 0; // Kolom N
                         
                         let baseData = { nama, g1: hargaG1, g2: hargaG2, e1: hargaE1, e2: hargaE2 };
                         
@@ -249,29 +260,31 @@
                     }
                 }
                 
+                // Jika sukses, nyalakan input kasir
                 let inputScanner = document.getElementById('barcodeInput');
                 inputScanner.disabled = false; 
                 inputScanner.placeholder = "Siap! Ketik / Scan..."; 
                 inputScanner.focus();
                 
                 preview.innerText = "✅ Database berhasil dimuat!";
-                preview.classList.replace('text-red-600', 'text-green-600');
-                
+                preview.className = "text-xs font-bold mt-1 h-4 text-green-600";
                 setTimeout(() => { preview.innerText = ""; }, 3000);
 
             } catch (error) {
                 preview.innerText = "❌ Gagal memuat database! Pastikan link CSV benar.";
-                preview.classList.remove('text-green-600');
-                preview.classList.add('text-red-600');
+                preview.className = "text-xs font-bold mt-1 h-4 text-red-600";
                 console.error("Error Database:", error);
             }
         }
         window.onload = fetchDatabase;
 
+        // ====================================================================
+        // AUTOMATED WHATSAPP RECEIPT ENGINE
+        // ====================================================================
         function kirimWhatsApp() {
             let noWA = document.getElementById('inputNoWA').value.trim();
             if (!noWA) {
-                alert("Masukkan nomor WhatsApp pelanggan dulu!");
+                alert("Masukkan nomor WhatsApp pelanggan dulu bray!");
                 document.getElementById('inputNoWA').focus();
                 return;
             }
@@ -321,6 +334,9 @@
             window.open(urlWA, '_blank');
         }
 
+        // ====================================================================
+        // INPUT HANDLERS & LOGIKA KASIR
+        // ====================================================================
         const inputHibrida = document.getElementById('barcodeInput');
         const dropdownSearch = document.getElementById('searchDropdown');
 
@@ -351,7 +367,11 @@
                 let barcode = this.value.trim();
                 if (barcode === "") return;
                 if (database[barcode]) aktifkanUIBarang(database[barcode]);
-                else document.getElementById('namaBarangPreview').innerText = "❌ Barcode tidak ditemukan!";
+                else {
+                    let preview = document.getElementById('namaBarangPreview');
+                    preview.innerText = "❌ Barcode tidak ditemukan!";
+                    preview.className = "text-xs font-bold mt-1 h-4 text-red-600";
+                }
             }
         });
 
@@ -360,7 +380,7 @@
             inputHibrida.value = currentBarang.nama; dropdownSearch.classList.add('hidden');
             let preview = document.getElementById('namaBarangPreview');
             preview.innerText = "Terdeteksi: " + currentBarang.nama;
-            preview.classList.replace('text-red-600', 'text-green-600');
+            preview.className = "text-xs font-bold mt-1 h-4 text-green-600";
             document.getElementById('qtyInput').disabled = false; document.getElementById('unitInput').disabled = false;
             let hargaSelect = document.getElementById('hargaSelect'); let customHargaInput = document.getElementById('customHargaInput');
             hargaSelect.disabled = false; hargaSelect.classList.remove('bg-gray-100'); hargaSelect.classList.add('bg-white');
@@ -450,7 +470,7 @@
             let inp = document.getElementById('barcodeInput');
             inp.value = ''; inp.placeholder = "Siap! Ketik / Scan..."; document.getElementById('searchDropdown').classList.add('hidden');
             let preview = document.getElementById('namaBarangPreview');
-            preview.innerText = ''; preview.classList.replace('text-red-600', 'text-green-600');
+            preview.innerText = ''; preview.className = "text-xs font-bold mt-1 h-4 text-green-600";
             document.getElementById('qtyInput').value = '1'; document.getElementById('qtyInput').disabled = true;
             document.getElementById('unitInput').value = 'pcs'; document.getElementById('unitInput').disabled = true;
             let hargaSelect = document.getElementById('hargaSelect');
